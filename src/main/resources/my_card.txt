@@ -1,0 +1,12 @@
+1. STAGE1
+2. Corvisquire
+3. 80
+4. COLORLESS
+5. src\main\resources\evolves_from.txt
+6. 2/Fury Attack/30
+7. LIGHTNING
+8. FIGHTING
+9. 1
+10. Sword&Shield Series Fusion Strike
+11. E
+12. Melnikova/Valeria/Dmitrievna/BSBO-05-23
