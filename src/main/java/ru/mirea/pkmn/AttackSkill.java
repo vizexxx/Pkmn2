@@ -56,6 +56,6 @@ public class AttackSkill implements Serializable {
     @Override
     public String toString()
     {
-        return  cost + "/" + name + "/" + damage;
+        return  cost + "/" + description + "/" + name + "/" + damage;
     }
 }

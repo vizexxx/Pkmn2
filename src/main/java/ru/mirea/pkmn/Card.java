@@ -16,6 +16,7 @@ public class Card implements Serializable {
     private String gameSet;
     private char regulationMark;
     private Student pokemonOwner;
+    private String number;
     public static final long serialVersionUID = 1L;
 
     public Card()
@@ -30,7 +31,7 @@ public class Card implements Serializable {
 
     public Card(PokemonStage pokemonStage, String name, int hp, EnergyType pokemonType,
                 Card evolvesFrom, List<AttackSkill> skills, EnergyType weaknessType, EnergyType resistanceType,
-                String retreatCost, String gameSet, char regulationMark, Student pokemonOwner)
+                String retreatCost, String gameSet, char regulationMark, Student pokemonOwner, String number)
     {
         this.pokemonStage = pokemonStage;
         this.name = name;
@@ -44,6 +45,7 @@ public class Card implements Serializable {
         this.gameSet = gameSet;
         this.regulationMark = regulationMark;
         this.pokemonOwner = pokemonOwner;
+        this.number=number;
     }
 
     public PokemonStage getPokemonStage()
@@ -154,9 +156,16 @@ public class Card implements Serializable {
         this.pokemonOwner = pokemonOwner;
     }
 
+    public String getNumber()
+    {
+        return number;
+    }
+    public void setNumber(String number) {
+        this.number = number;
+    }
     @Override
     public String toString() {
             return String.format("\u001b[38;5;111m%s pokemon:\u001b[38;5;15m \n" +
-                    "1. ", this.pokemonStage) + this.pokemonStage + "\n2. " + name + "\n3. " + hp + "\n4. " + pokemonType + "\n5. " + evolvesFrom + "\n6. " + skills + "\n7. " + weaknessType + "\n8. " + resistanceType + "\n9. " + retreatCost + "\n10. " + gameSet + "\n11. " + regulationMark + "\n12. " + pokemonOwner + "\n";
+                    "1. ", this.pokemonStage) + this.pokemonStage + "\n2. " + name + "\n3. " + hp + "\n4. " + pokemonType + "\n5. " + evolvesFrom + "\n6. " + skills + "\n7. " + weaknessType + "\n8. " + resistanceType + "\n9. " + retreatCost + "\n10. " + gameSet + "\n11. " + regulationMark + "\n12. " + pokemonOwner + "\n13. "+ number + "\n";
     }
 }
