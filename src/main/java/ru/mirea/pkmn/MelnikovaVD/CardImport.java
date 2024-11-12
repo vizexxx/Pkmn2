@@ -52,7 +52,6 @@ public class CardImport
                 skillList.add(attack);
             }
             card.setSkills(skillList);
-            card = CardImport.setDescriptionsFromAPI(card, pkmnHttpClient);
             card.setWeaknessType(EnergyType.valueOf(reader.readLine().split(" ")[1]));
             card.setResistanceType(EnergyType.valueOf(reader.readLine().split(" ")[1]));
             card.setRetreatCost(reader.readLine().split(" ")[1]);
@@ -84,17 +83,14 @@ public class CardImport
             setDescriptionsFromAPI(card.getEvolvesFrom(), httpClient);
 
         JsonNode cardNode = httpClient.getPokemonCard(card.getName(), card.getNumber());
-
         Stream<JsonNode> attackStream = cardNode.findValues("attacks").stream();
         JsonNode attacks = attackStream.toList().getFirst();
-        attackStream.close();
-
         for(JsonNode attack : attacks) {
             card = CardImport.SkillDescription(card,
                     attack.findValue("name").asText(),
                     attack.findValue("text").asText());
         }
-
+        attackStream.close();
         return card;
     }
 

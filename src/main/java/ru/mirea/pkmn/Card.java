@@ -66,7 +66,7 @@ public class Card implements Serializable {
         this.name = name;
     }
 
-    public Integer getHp()
+    public int getHp()
     {
         return hp;
     }
