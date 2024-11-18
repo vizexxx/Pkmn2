@@ -21,11 +21,15 @@ public class PkmnApplication
         System.out.println("\n\n");
         System.out.printf("\u001b[38;5;111m\nTask PKMN:\u001b[38;5;0m\n");
 
-        //System.out.println(myCard);
+        
         DatabaseServiceImpl db = new DatabaseServiceImpl();
+        //System.out.println(db.getCardFromDatabase("Azumarill"));
         //db.createPokemonOwner(myCard.getPokemonOwner());
-        //db.saveCardToDatabase(myCard.getEvolvesFrom());
-
+//        while (myCard.getEvolvesFrom() != null) {
+//            db.saveCardToDatabase(myCard);
+//            myCard = myCard.getEvolvesFrom();
+//        }
+        db.saveCardToDatabase(myCard);
     }
 
 

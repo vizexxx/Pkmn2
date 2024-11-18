@@ -43,33 +43,70 @@ public class DatabaseServiceImpl implements DatabaseService {
     public Card getCardFromDatabase(String cardName) {
         String query = "select * from card where \"name\" = ?";
         Card card = new Card();
+        Student ownerPokemon = new Student();
         try (PreparedStatement statement = connection.prepareStatement(query))
         {
             statement.setObject(1, cardName);
             ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                card.setName(resultSet.getString("name"));
+                card.setHp(resultSet.getInt("hp"));
 
-            card.setName(resultSet.getString("name"));
-            card.setHp(resultSet.getInt("hp"));
-            if ((UUID) resultSet.getObject("evolves_from") != null)
-                getEvolve((UUID) resultSet.getObject("evolves_from"));
-            card.setGameSet(resultSet.getString("game_set"));
-            if ((UUID) resultSet.getObject("pokemon_owner") != null)
-                card.setPokemonOwner(getOwner((UUID) resultSet.getObject
-                        ("pokemon_owner")));
-            card.setPokemonStage(PokemonStage.valueOf(resultSet.getString("stage")));
-            card.setRetreatCost(resultSet.getString("retreat_cost"));
-            card.setWeaknessType(EnergyType.valueOf(resultSet.getString("weakness_type")));
-            card.setResistanceType(EnergyType.valueOf(resultSet.getString("resistance_type")));
-            card.setSkills(getSkills(resultSet.getString("attack_skills")));
-            card.setPokemonType(EnergyType.valueOf(resultSet.getString("pokemon_type")));
-            card.setRegulationMark(resultSet.getString("regulation_mark").charAt(0));
-            card.setNumber(resultSet.getString("card_number"));
-            return card;
+                if (resultSet.getObject("evolves_from") != null) {
+                    Card evolvesFromCard = getEvolve((UUID) resultSet.getObject("evolves_from"));
+                    card.setEvolvesFrom(evolvesFromCard);
+                }
+                else
+                    card.setEvolvesFrom(null);
+                card.setGameSet(resultSet.getString("game_set"));
+
+                if (resultSet.getObject("pokemon_owner") != null) {
+                    ownerPokemon = getOwner((UUID) resultSet.getObject("pokemon_owner"));
+                    card.setPokemonOwner(ownerPokemon);
+                }
+                else
+                    card.setPokemonOwner(null);
+                card.setPokemonStage(PokemonStage.valueOf(resultSet.getString("stage")));
+                if (!resultSet.getString("retreat_cost").equals("null"))
+                    card.setRetreatCost(resultSet.getString("retreat_cost"));
+                else
+                    card.setRetreatCost(null);
+                if (!resultSet.getString("weakness_type").equals("null"))
+                    card.setWeaknessType(EnergyType.valueOf(resultSet.getString("weakness_type")));
+                else
+                    card.setWeaknessType(null);
+                if (!resultSet.getString("resistance_type").equals("null"))
+                    card.setResistanceType(EnergyType.valueOf(resultSet.getString("resistance_type")));
+                else
+                    card.setResistanceType(null);
+                card.setSkills(getSkills(resultSet.getString("attack_skills")));
+                card.setPokemonType(EnergyType.valueOf(resultSet.getString("pokemon_type")));
+                card.setRegulationMark(resultSet.getString("regulation_mark").charAt(0));
+                card.setNumber(resultSet.getString("card_number"));
+                statement.close();
+                return card;
+            }
+            return null;
         }
         catch (SQLException | JsonProcessingException e)
         {
             throw new RuntimeException(e);
         }
+    }
+    public Student getStudentFromDatabaseId(String id) throws SQLException {
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery("SELECT * FROM student WHERE \"id\" = '" + id + "';");
+        Student student = null;
+        if (resultSet.next()) {
+            String firstName = resultSet.getString("familyName");
+            String surName = resultSet.getString("firstName");
+            String familyName = resultSet.getString("patronicName");
+            String group = resultSet.getString("group");
+
+            student = new Student(firstName, surName, familyName, group);
+        }
+        statement.close();
+        return student;
     }
 
 
@@ -85,8 +122,8 @@ public class DatabaseServiceImpl implements DatabaseService {
             statement.setString(3, splitName[2]);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
-                student.setSurName(resultSet.getString("surName"));
-                student.setFirstName(resultSet.getString("firstName"));
+                student.setSurName(resultSet.getString("firstName"));
+                student.setFirstName(resultSet.getString("surName"));
                 student.setFamilyName(resultSet.getString("patronicName"));
                 student.setGroup(resultSet.getString("group"));
                 return student;
@@ -105,8 +142,8 @@ public class DatabaseServiceImpl implements DatabaseService {
         try (PreparedStatement statement = connection.prepareStatement(query))
         {
             statement.setObject(1, UUID.randomUUID());
-            statement.setString(2, owner.getSurName());
-            statement.setString(3, owner.getFirstName());
+            statement.setString(2, owner.getFirstName());
+            statement.setString(3, owner.getSurName());
             statement.setString(4, owner.getFamilyName());
             statement.setString(5, owner.getGroup());
             statement.execute();
@@ -115,6 +152,7 @@ public class DatabaseServiceImpl implements DatabaseService {
         {
             throw new RuntimeException(e);
         }
+
     }
 
     @Override
@@ -136,19 +174,22 @@ public class DatabaseServiceImpl implements DatabaseService {
             statement.setObject(1,UUID.randomUUID());
             statement.setString(2, card.getName());
             statement.setInt(3, card.getHp());
-            if (card.getEvolvesFrom() != null)
+            if (card.getEvolvesFrom() != null) {
+
+                saveCardToDatabase(card.getEvolvesFrom());
                 statement.setObject(4, saveEvolve(card.getEvolvesFrom()));
+            }
             else
                 statement.setObject(4, null);
             statement.setString(5, card.getGameSet());
             if (card.getPokemonOwner() != null) {
                 Student owner = card.getPokemonOwner();
-                if (getStudentFromDatabase(owner.toString())!=null)
-                    statement.setObject(6, saveOwner(card.getPokemonOwner()));
-                else {
-                    createPokemonOwner(card.getPokemonOwner());
-                    statement.setObject(6, saveOwner(card.getPokemonOwner()));
-                }
+//                if (getStudentFromDatabase(owner.toString())!=null)
+//                    statement.setObject(6, saveOwner(owner));
+//                else {
+                    createPokemonOwner(owner);
+                    statement.setObject(6, saveOwner(owner));
+//                }
             }
             else
                 statement.setObject(6, null);
@@ -168,17 +209,21 @@ public class DatabaseServiceImpl implements DatabaseService {
         }
     }
 
-    public void getEvolve(UUID ID) {
-            String query = "select * from card where \"id\" = ?";
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
+    public Card getEvolve(UUID ID) {
+        String query = "select * from card where \"id\" = ?";
+        Card evolves = null;
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setObject(1, ID);
                 ResultSet resultSet = statement.executeQuery();
-                String nameEvolvesFrom;
-                nameEvolvesFrom = resultSet.getString("name");
-                getCardFromDatabase(nameEvolvesFrom);
+                if (resultSet.next()) {
+                    String nameEvolvesFrom;
+                    nameEvolvesFrom = resultSet.getString("name");
+                    evolves = getCardFromDatabase(nameEvolvesFrom);
+                }
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
+        return evolves;
     }
     public Student getOwner(UUID ID) {
         Student student = new Student();
@@ -187,16 +232,20 @@ public class DatabaseServiceImpl implements DatabaseService {
         {
             statement.setObject(1, ID);
             ResultSet resultSet = statement.executeQuery();
-            student.setFirstName(resultSet.getString("firstName"));
-            student.setSurName(resultSet.getString("familyName"));
-            student.setFamilyName(resultSet.getString("patronicName"));
-            student.setGroup(resultSet.getString("group"));
-            return student;
+            if (resultSet.next()) {
+                student.setFirstName(resultSet.getString("familyName"));
+                student.setSurName(resultSet.getString("firstName"));
+                student.setFamilyName(resultSet.getString("patronicName"));
+                student.setGroup(resultSet.getString("group"));
+            }
+            else
+                student = null;
         }
         catch (SQLException e)
         {
             throw new RuntimeException(e);
         }
+        return student;
     }
     public List<AttackSkill> getSkills(String attack_skills) throws JsonProcessingException {
         Gson gson = new Gson();
@@ -221,7 +270,7 @@ public class DatabaseServiceImpl implements DatabaseService {
         String query = "select * from student where \"firstName\" = ?";
         try (PreparedStatement statement = connection.prepareStatement(query))
         {
-            statement.setObject(1, owner.getFirstName());
+            statement.setObject(1, owner.getSurName());
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next())
                 return UUID.fromString(resultSet.getString("id"));
